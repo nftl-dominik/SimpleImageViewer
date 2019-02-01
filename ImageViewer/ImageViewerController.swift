@@ -1,7 +1,7 @@
 import UIKit
 import AVFoundation
 
-public final class ImageViewerController: UIViewController {
+open class ImageViewerController: UIViewController {
     @IBOutlet fileprivate var scrollView: UIScrollView!
     @IBOutlet fileprivate var imageView: UIImageView!
     @IBOutlet fileprivate var activityIndicator: UIActivityIndicatorView!
@@ -9,7 +9,10 @@ public final class ImageViewerController: UIViewController {
     fileprivate var transitionHandler: ImageViewerTransitioningHandler?
     fileprivate let configuration: ImageViewerConfiguration?
     
-    public override var prefersStatusBarHidden: Bool {
+    /// Block called when image view is dimissed
+    public var dismissCompletionBlock: (() -> Void)?
+    
+    override open var prefersStatusBarHidden: Bool {
         return true
     }
     
@@ -26,7 +29,7 @@ public final class ImageViewerController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override public func viewDidLoad() {
+    open override func viewDidLoad() {
         super.viewDidLoad()
         imageView.image = configuration?.imageView?.image ?? configuration?.image
         
@@ -34,6 +37,12 @@ public final class ImageViewerController: UIViewController {
         setupGestureRecognizers()
         setupTransitions()
         setupActivityIndicator()
+    }
+    
+    open override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        dismissCompletionBlock?()
     }
 }
 
@@ -108,7 +117,7 @@ private extension ImageViewerController {
             zoomRect.origin.y = newCenter.y - (zoomRect.size.height / 2.0)
             return zoomRect
         }
-
+        
         if scrollView.zoomScale > scrollView.minimumZoomScale {
             scrollView.setZoomScale(scrollView.minimumZoomScale, animated: true)
         } else {
@@ -118,7 +127,7 @@ private extension ImageViewerController {
     
     @objc func imageViewPanned(_ recognizer: UIPanGestureRecognizer) {
         guard transitionHandler != nil else { return }
-            
+        
         let translation = recognizer.translation(in: imageView)
         let velocity = recognizer.velocity(in: imageView)
         
